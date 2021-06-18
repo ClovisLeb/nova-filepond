@@ -102,27 +102,55 @@ class FilepondController extends BaseController
     public function load(Request $request)
     {
 
+               // $disk = $request->input('disk');
+
+        // $serverId = Filepond::getPathFromServerId($request->input('serverId'));
+
+        // $pathInfo = pathinfo($serverId);
+        // $filename = $pathInfo[ 'filename' ];
+        // $basename = $pathInfo[ 'basename' ];
+        // $extension = $pathInfo[ 'extension' ];
+
+        // $response = response(Storage::disk($disk)->get($serverId))
+        //     ->header('Content-Disposition', "inline; name=\"$filename\"; filename=\"$basename\"")
+        //     ->header('Content-Length', Storage::disk($disk)->size($serverId));
+
+        // if ($mimeType = Filepond::guessMimeType($extension)) {
+
+        //     $response->header('Content-Type', $mimeType);
+
+        // }
+
+        // return $response;
+
         $disk = $request->input('disk');
 
         $serverId = Filepond::getPathFromServerId($request->input('serverId'));
 
         $pathInfo = pathinfo($serverId);
-        $filename = $pathInfo[ 'filename' ];
-        $basename = $pathInfo[ 'basename' ];
-        $extension = $pathInfo[ 'extension' ];
+        $filename = $pathInfo['filename'];
+        $basename = $pathInfo['basename'];
+        $extension = $pathInfo['extension'];
 
-        $response = response(Storage::disk($disk)->get($serverId))
-            ->header('Content-Disposition', "inline; name=\"$filename\"; filename=\"$basename\"")
-            ->header('Content-Length', Storage::disk($disk)->size($serverId));
+        if (is_null($serverId)) {
+            $image = file_get_contents($serverId);
+        } else {
+            if (str_starts_with($serverId, "http")) {
+                $image = file_get_contents($serverId);
+            } else {
+                $image = Storage::disk($disk)->get($serverId);
+            }
+        }
+
+        $response = response($image)
+            ->header('Content-Disposition', "inline; name=\"$filename\"; filename=\"$basename\"");
 
         if ($mimeType = Filepond::guessMimeType($extension)) {
 
             $response->header('Content-Type', $mimeType);
-
         }
 
         return $response;
-
     }
 
     private function getCreationRules(string $resource, NovaRequest $request): array
